@@ -210,14 +210,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="type-btn sel" id="aiOptR" onclick="selAIType('recette')"><i class="ti ti-book"></i> Recette</button>
       <button class="type-btn" id="aiOptB" onclick="selAIType('base')"><i class="ti ti-building-community"></i> Base</button>
     </div>
-    <div class="drop-zone" id="dropZone" onclick="document.getElementById('aiFile').click()"
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <label style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;border:1.5px dashed var(--border2);border-radius:var(--rl);cursor:pointer;background:var(--bg2);">
+        <i class="ti ti-camera" style="font-size:28px;color:var(--green)"></i>
+        <span style="font-size:13px;font-weight:500;color:var(--text)">Appareil photo</span>
+        <small style="font-size:11px;color:var(--text3)">Prendre une photo</small>
+        <input type="file" id="aiFileCamera" accept="image/*" capture="environment" onchange="loadImg(this)" style="display:none">
+      </label>
+      <label style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;border:1.5px dashed var(--border2);border-radius:var(--rl);cursor:pointer;background:var(--bg2);">
+        <i class="ti ti-photo" style="font-size:28px;color:var(--green)"></i>
+        <span style="font-size:13px;font-weight:500;color:var(--text)">Galerie / Fichier</span>
+        <small style="font-size:11px;color:var(--text3)">Choisir une image</small>
+        <input type="file" id="aiFile" accept="image/*" onchange="loadImg(this)" style="display:none">
+      </label>
+    </div>
+    <div class="drop-zone" id="dropZone" style="display:none"
       ondragover="ev=>{ev.preventDefault();document.getElementById('dropZone').classList.add('drag')}"
       ondragleave="document.getElementById('dropZone').classList.remove('drag')"
       ondrop="handleDrop(event)">
-      <i class="ti ti-photo-up"></i>
-      <p>Appuyer pour choisir une photo</p>
-      <small>Photo de recette, scan, capture Instagram…</small>
-      <input type="file" id="aiFile" accept="image/*" onchange="loadImg(this)" style="display:none">
     </div>
     <div class="preview-wrap" id="prevWrap" style="display:none">
       <img id="prevImg" src="" alt="">
@@ -486,6 +496,7 @@ function clearAI(){
   document.getElementById('prevWrap').style.display='none';
   document.getElementById('dropZone').style.display='block';
   document.getElementById('aiFile').value='';
+  const camFile=document.getElementById('aiFileCamera');if(camFile)camFile.value='';
   document.getElementById('aiStatus').classList.remove('show');
   document.getElementById('aiResult').classList.remove('show');
   const btn=document.getElementById('aiBtn');
