@@ -433,7 +433,7 @@ function linkBase(rid){const sel=document.getElementById('bsel-'+rid);if(!sel)re
 function unlinkBase(rid,bid){const r=getItem(rid);if(!r)return;r.bases=(r.bases||[]).filter(b=>b!==bid);saveLocal();refreshBody(r);}
 function goBase(bid){switchTab('bases');openId=bid;renderAll();setTimeout(()=>{const el=document.getElementById('card-'+bid);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},80);}
 function saveItem(id){save();const btn=document.querySelector(`#card-${id} .btn-save`);if(btn){btn.innerHTML='<i class="ti ti-check"></i> Sauvegardé';setTimeout(()=>{btn.innerHTML='<i class="ti ti-check"></i> Enregistrer';},1400);}renderAll();}
-function delItem(id){if(!confirm('Supprimer ?'))return;db.recettes=db.recettes.filter(r=>r.id!==id);db.bases=db.bases.filter(b=>b.id!==id);db.recettes.forEach(r=>{if(r.bases)r.bases=r.bases.filter(b=>b!==id);});openId=null;saveLocal();renderAll();}
+function delItem(id){if(!confirm('Supprimer ?'))return;db.recettes=db.recettes.filter(r=>r.id!==id);db.bases=db.bases.filter(b=>b.id!==id);db.recettes.forEach(r=>{if(r.bases)r.bases=r.bases.filter(b=>b!==id);});openId=null;save();renderAll();}
 function refreshBody(r){const el=document.getElementById('body-'+r.id);if(el)el.innerHTML=buildBody(r);}
 function trigPhoto(id){document.getElementById('pi-'+id).click();}
 function handlePhoto(id,input){if(!input.files[0])return;const reader=new FileReader();reader.onload=e=>{const r=getItem(id);if(!r)return;r.photo=e.target.result;saveLocal();refreshBody(r);};reader.readAsDataURL(input.files[0]);}
