@@ -56,6 +56,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .rtag{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:2px;}
 .bpill{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;background:var(--gl);color:var(--gd);}
 .chev{font-size:18px;color:var(--text3);transition:transform 0.2s;flex-shrink:0;}
+.quick-btns{display:flex;gap:4px;flex-shrink:0;}
+.qbtn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:0.5px solid var(--border);cursor:pointer;background:var(--bg2);color:var(--text2);font-size:15px;}
+.qbtn:hover{background:var(--bg3);}
+.qbtn.green{border-color:var(--gb);background:var(--gl);color:var(--gd);}
+.qbtn.green:hover{background:var(--gb);}
+.qbtn.red:hover{border-color:#E24B4A;color:#E24B4A;background:#FEF0F0;}
 .chev.open{transform:rotate(180deg);}
 
 .rbody{display:none;border-top:0.5px solid var(--border);}
@@ -334,6 +340,11 @@ function buildCard(r){
           ${lbases}
         </div>
       </div>
+      <div class="quick-btns" onclick="event.stopPropagation()">
+        <button class="qbtn" onclick="printItem(${r.id})" title="Imprimer"><i class="ti ti-printer"></i></button>
+        <button class="qbtn green" onclick="saveItem(${r.id})" title="Enregistrer"><i class="ti ti-device-floppy"></i></button>
+        <button class="qbtn red" onclick="delItem(${r.id})" title="Supprimer"><i class="ti ti-trash"></i></button>
+      </div>
       <i class="ti ti-chevron-down chev${openId===r.id?' open':''}"></i>
     </div>
     <div class="rbody${openId===r.id?' open':''}" id="body-${r.id}">${buildBody(r)}</div>`;
@@ -406,6 +417,37 @@ function buildBody(r){
   </div>`;
 }
 
+function printItem(id){
+  const r=getItem(id);if(!r)return;
+  const ings=(r.ingredients||[]).map(i=>`<li>${i.qty} ${i.unit} ${i.name}</li>`).join('');
+  const steps=(r.steps||[]).map((s,i)=>`<li>${s}</li>`).join('');
+  const photo=r.photo?`<img src="${r.photo}" style="width:200px;height:200px;object-fit:cover;border-radius:8px;float:right;margin:0 0 12px 16px">`:'' ;
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${r.name}</title>
+  <style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;color:#1C1C1A;}
+  h1{font-size:28px;margin-bottom:4px;}
+  .meta{font-size:13px;color:#6B6860;margin-bottom:16px;}
+  h2{font-size:15px;text-transform:uppercase;letter-spacing:0.08em;color:#A8A59F;margin:20px 0 8px;}
+  ul,ol{padding-left:20px;} li{margin-bottom:6px;font-size:14px;}
+  .notes{background:#F2F0EB;padding:12px;border-radius:8px;font-size:13px;font-style:italic;}
+  @media print{body{margin:20px;}}</style></head><body>
+  ${photo}
+  <h1>${r.name}</h1>
+  <div class="meta">
+    ${r.fiche.portions?'Portions : '+r.fiche.portions+' &nbsp;·&nbsp; ':''}
+    ${r.fiche.temps_prep?'Prép. : '+r.fiche.temps_prep+' &nbsp;·&nbsp; ':''}
+    ${r.fiche.temps_cuisson?'Cuisson : '+r.fiche.temps_cuisson+' &nbsp;·&nbsp; ':''}
+    ${r.fiche.difficulte?r.fiche.difficulte:''}
+    ${r.fiche.origine?' &nbsp;·&nbsp; '+r.fiche.origine:''}
+  </div>
+  <h2>Ingrédients</h2><ul>${ings}</ul>
+  <h2>Progression</h2><ol>${steps}</ol>
+  ${r.notes?'<h2>Notes</h2><div class="notes">'+r.notes+'</div>':''}
+  </body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(),400);
+}
 function toggle(id){openId=openId===id?null:id;renderAll();if(openId)setTimeout(()=>{const el=document.getElementById('card-'+openId);if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},50);}
 function upName(id,v){
   const r=getItem(id);if(!r)return;
