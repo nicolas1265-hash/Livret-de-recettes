@@ -21,7 +21,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .hero{background:linear-gradient(135deg,#0F4D35 0%,#1D9E75 60%,#2DC98A 100%);padding:20px 12px 16px;text-align:center;position:relative;overflow:hidden;}
 .hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");}
 .hero-label{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:5px;}
-.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,7vw,52px);font-weight:600;color:#fff;line-height:1.0;margin-bottom:4px;letter-spacing:0.12em;word-spacing:0.15em;white-space:nowrap;}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(22px,5.5vw,48px);font-weight:600;color:#fff;line-height:1.0;margin-bottom:4px;letter-spacing:0.28em;word-spacing:0.25em;white-space:nowrap;text-transform:uppercase;}
 .hero-title em{font-style:italic;color:rgba(255,255,255,0.88);}
 .hero-sub{font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:12px;}
 .hero-actions{display:flex;justify-content:center;gap:8px;}
@@ -57,7 +57,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .rthumb img{width:100%;height:100%;object-fit:cover;}
 .rthumb i{font-size:20px;color:var(--text3);}
 .rinfo{flex:1;min-width:0;}
-.rname{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Playfair Display',serif;}
+.rname{font-size:18px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Playfair Display',serif;}
 .rmeta{display:flex;gap:8px;margin-top:3px;flex-wrap:wrap;}
 .rtag{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:2px;}
 .bpill{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;background:var(--gl);color:var(--gd);}
@@ -196,7 +196,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="list-wrap" id="listWrap"></div>
 
 <div class="fab-wrap">
-  <button class="fab fab-ai" onclick="openAI()"><i class="ti ti-scan"></i> Importer via IA</button>
   <button class="fab fab-main" onclick="openAdd()"><i class="ti ti-plus"></i> <span id="fabLbl">Nouvelle recette</span></button>
 </div>
 
@@ -211,6 +210,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="type-btn" id="optB" onclick="selType('base')"><i class="ti ti-building-community"></i> Base</button>
     </div>
     <input type="text" id="newName" placeholder="Nom…" onkeydown="if(event.key==='Enter')confirmAdd()">
+    <div style="text-align:center;margin:4px 0 8px;">
+      <span style="font-size:12px;color:var(--text3);">ou</span>
+    </div>
+    <button onclick="closeAdd();openAI();" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;font-size:13px;font-weight:500;border:1.5px dashed var(--gb);border-radius:var(--r);background:var(--gl);color:var(--gd);cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px;">
+      <i class="ti ti-scan"></i> Importer via IA
+    </button>
     <div class="sheet-actions">
       <button class="btn-del" onclick="closeAdd()">Annuler</button>
       <button class="btn-save" onclick="confirmAdd()">Créer</button>
@@ -339,10 +344,10 @@ function buildCard(r){
   card.className='rcard'+(r.type==='base'?' base':'');
   card.id='card-'+r.id;
   const thumb=r.photo?`<img src="${r.photo}" alt="">`:
-  `<svg viewBox="0 0 40 40" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 6v8a4 4 0 0 0 4 4v10a1 1 0 0 0 2 0V18a4 4 0 0 0 4-4V6a1 1 0 0 0-1-1H13a1 1 0 0 0-1 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M20 6v7M16 6v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M28 5c0 0-2 3-2 7s2 6 2 6v10a1 1 0 0 1-2 0V5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  `<svg viewBox="0 0 40 40" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 6v8a4 4 0 0 0 4 4v10a1 1 0 0 0 2 0V18a4 4 0 0 0 4-4V6a1 1 0 0 0-1-1H13a1 1 0 0 0-1 1z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20 6v7M16 6v7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M28 5c0 0-2 3-2 7s2 6 2 6v10a1 1 0 0 1-2 0V5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`;
   const lbases=r.type==='recette'?(r.bases||[]).map(bid=>{const b=getItem(bid);return b?`<span class="bpill"><i class="ti ti-link"></i> ${b.name}</span>`:''}).join(''):'';
   card.innerHTML=`
@@ -360,7 +365,6 @@ function buildCard(r){
       <div class="quick-btns" onclick="event.stopPropagation()">
         <button class="qbtn" onclick="printItem(${r.id})" title="Imprimer"><i class="ti ti-printer"></i></button>
         <button class="qbtn green" onclick="saveItem(${r.id})" title="Enregistrer"><i class="ti ti-device-floppy"></i></button>
-        <button class="qbtn red" onclick="delItem(${r.id})" title="Supprimer"><i class="ti ti-trash"></i></button>
       </div>
       <i class="ti ti-chevron-down chev${openId===r.id?' open':''}"></i>
     </div>
@@ -407,7 +411,7 @@ function buildBody(r){
       <div>
         <div class="sec" style="margin-top:0">Photo</div>
         <div class="photo-block" onclick="trigPhoto(${r.id})" style="aspect-ratio:1;width:100%;">${photoC}</div>
-        <input type="file" accept="image/*" style="display:none" id="pi-${r.id}" onchange="handlePhoto(${r.id},this)">
+        <input type="file" accept="image/*" capture="environment" style="display:none" id="pi-${r.id}" onchange="handlePhoto(${r.id},this)">
       </div>
     </div>
     <div class="sec">Ingrédients</div>
