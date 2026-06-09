@@ -112,11 +112,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .fiche-photo-grid{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start;}
 @media(max-width:560px){.fiche-photo-grid{grid-template-columns:1fr;}.fiche-photo-grid>div:last-child{order:-1;}}
 .notes-area{width:100%;font-size:13px;border:0.5px solid var(--border);border-radius:var(--r);padding:8px 10px;background:var(--bg2);color:var(--text);font-family:'DM Sans',sans-serif;resize:vertical;min-height:70px;}
-.mic-btn{margin-left:6px;width:24px;height:24px;border-radius:50%;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;}
-.mic-btn:hover{background:var(--bg3);color:var(--green);}
-.step-btns{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
-.btn-xs.mic:hover{color:var(--green);border-color:var(--green);}
-.rec{background:#E24B4A !important;color:#fff !important;border-color:#E24B4A !important;animation:micpulse 1s infinite;}
+.mic-btn{margin-left:8px;width:30px;height:30px;border-radius:50%;border:none;background:var(--gl);color:var(--gd);cursor:pointer;font-size:16px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+.mic-btn:hover{background:var(--gb);}
+.step-btns{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.btn-xs.mic{width:28px;height:28px;font-size:15px;background:var(--gl);color:var(--gd);border:none;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+.btn-xs.mic:hover{background:var(--gb);color:var(--gd);}
+.rec{background:#E24B4A !important;color:#fff !important;border-color:#E24B4A !important;animation:micpulse 1s infinite;box-shadow:0 0 0 4px rgba(226,75,74,0.2) !important;}
 @keyframes micpulse{0%,100%{opacity:1;}50%{opacity:0.55;}}
 
 .btn-link{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;padding:2px 0;margin-top:6px;font-family:'DM Sans',sans-serif;}
