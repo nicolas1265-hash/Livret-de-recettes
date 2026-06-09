@@ -112,6 +112,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .fiche-photo-grid{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start;}
 @media(max-width:560px){.fiche-photo-grid{grid-template-columns:1fr;}.fiche-photo-grid>div:last-child{order:-1;}}
 .notes-area{width:100%;font-size:13px;border:0.5px solid var(--border);border-radius:var(--r);padding:8px 10px;background:var(--bg2);color:var(--text);font-family:'DM Sans',sans-serif;resize:vertical;min-height:70px;}
+.mic-btn{margin-left:6px;width:24px;height:24px;border-radius:50%;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;}
+.mic-btn:hover{background:var(--bg3);color:var(--green);}
+.step-btns{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+.btn-xs.mic:hover{color:var(--green);border-color:var(--green);}
+.rec{background:#E24B4A !important;color:#fff !important;border-color:#E24B4A !important;animation:micpulse 1s infinite;}
+@keyframes micpulse{0%,100%{opacity:1;}50%{opacity:0.55;}}
 
 .btn-link{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;padding:2px 0;margin-top:6px;font-family:'DM Sans',sans-serif;}
 .btn-link:hover{color:var(--text);}
@@ -381,8 +387,11 @@ function buildBody(r){
   </li>`).join('');
   const steps=(r.steps||[]).map((s,i)=>`<div class="step-row">
     <div class="snum">${i+1}</div>
-    <textarea oninput="upStep(${r.id},${i},this.value)">${s}</textarea>
-    <button class="btn-xs" onclick="remStep(${r.id},${i})"><i class="ti ti-x"></i></button>
+    <textarea id="step-${r.id}-${i}" oninput="upStep(${r.id},${i},this.value)">${s}</textarea>
+    <div class="step-btns">
+      <button class="btn-xs mic" onclick="dictate('step-${r.id}-${i}', v=>upStep(${r.id},${i},v), this)" title="Dicter l'étape"><i class="ti ti-microphone"></i></button>
+      <button class="btn-xs" onclick="remStep(${r.id},${i})"><i class="ti ti-x"></i></button>
+    </div>
   </div>`).join('');
   const photoC=r.photo?`<img src="${r.photo}" alt=""><div class="photo-ov"><i class="ti ti-camera"></i></div>`:`<i class="ti ti-camera" style="font-size:26px;color:var(--text3)"></i><span style="font-size:12px;color:var(--text3)">Toucher pour ajouter</span>`;
   const cats=r.type==='base'?['Fond','Sauce mère','Pâte','Crème','Marinade','Coulis','Autre']:['Entrée','Plat','Dessert','Apéritif','Sauce','Pain','Boisson','Autre'];
@@ -421,8 +430,8 @@ function buildBody(r){
     <div id="steps-${r.id}">${steps}</div>
     <button class="btn-link" onclick="addStep(${r.id})"><i class="ti ti-plus"></i> Ajouter une étape</button>
     ${basesBlock}
-    <div class="sec" style="margin-top:14px">Notes & astuces</div>
-    <textarea class="notes-area" oninput="upNotes(${r.id},this.value)">${r.notes||''}</textarea>
+    <div class="sec" style="margin-top:14px">Notes & astuces <button class="mic-btn" onclick="dictate('notes-${r.id}', v=>upNotes(${r.id},v), this)" title="Dicter les notes"><i class="ti ti-microphone"></i></button></div>
+    <textarea class="notes-area" id="notes-${r.id}" oninput="upNotes(${r.id},this.value)">${r.notes||''}</textarea>
   <div class="sec">Nom & type</div>
   <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
     <input type="text" value="${r.name}" style="flex:1;font-size:15px;font-weight:500;border:none;border-bottom:0.5px solid var(--border);background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;padding:4px 0;" oninput="upName(${r.id},this.value)">
@@ -436,6 +445,33 @@ function buildBody(r){
     <button class="btn-del" onclick="delItem(${r.id})"><i class="ti ti-trash"></i> Supprimer</button>
     <button class="btn-save" onclick="saveItem(${r.id})"><i class="ti ti-check"></i> Enregistrer</button>
   </div>`;
+}
+
+// ─── DICTÉE VOCALE ─────────────────────────────────────
+let activeRec=null;
+function dictate(elId,onText,btn){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert("La dictée vocale n'est pas disponible sur ce navigateur. Utilisez Chrome ou Safari récent.");return;}
+  if(activeRec){activeRec.stop();return;}
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const rec=new SR();
+  rec.lang='fr-FR';rec.continuous=true;rec.interimResults=true;
+  const base=el.value&&!el.value.endsWith(' ')?el.value+' ':el.value;
+  if(btn)btn.classList.add('rec');
+  rec.onresult=e=>{
+    let fin='',interim='';
+    for(let i=0;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal)fin+=t+' ';else interim+=t;
+    }
+    el.value=base+fin+interim;
+    onText(el.value);
+  };
+  rec.onend=()=>{if(btn)btn.classList.remove('rec');activeRec=null;};
+  rec.onerror=ev=>{if(btn)btn.classList.remove('rec');activeRec=null;if(ev.error==='not-allowed')alert("Autorisez l'accès au micro pour dicter.");};
+  activeRec=rec;
+  try{rec.start();}catch(e){activeRec=null;if(btn)btn.classList.remove('rec');}
 }
 
 function printItem(id){
