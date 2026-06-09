@@ -466,9 +466,14 @@ function dictateProgression(rid,btn){
   if(hint)hint.classList.add('show');
   if(btn)btn.classList.add('rec');
   const SPLIT=/\s*(?:étapes? suivantes?|etapes? suivantes?|nouvelles? étapes?|nouvelles? etapes?|prochaines? étapes?|prochaines? etapes?|étape d'après|etape d'apres|point suivant)\s*/gi;
+  let finalT='';
   rec.onresult=e=>{
-    let full='';
-    for(let i=0;i<e.results.length;i++){full+=e.results[i][0].transcript+' ';}
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal)finalT+=t+' ';else interim+=t;
+    }
+    const full=finalT+interim;
     const parts=full.split(SPLIT).map(p=>p.trim()).filter(p=>p.length);
     r.steps=[...committed,...parts];
     if(r.steps.length===0)r.steps=[''];
@@ -495,13 +500,14 @@ function dictate(elId,onText,btn){
   rec.lang='fr-FR';rec.continuous=true;rec.interimResults=true;
   const base=el.value&&!el.value.endsWith(' ')?el.value+' ':el.value;
   if(btn)btn.classList.add('rec');
+  let finalT='';
   rec.onresult=e=>{
-    let fin='',interim='';
-    for(let i=0;i<e.results.length;i++){
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
       const t=e.results[i][0].transcript;
-      if(e.results[i].isFinal)fin+=t+' ';else interim+=t;
+      if(e.results[i].isFinal)finalT+=t+' ';else interim+=t;
     }
-    el.value=base+fin+interim;
+    el.value=base+finalT+interim;
     onText(el.value);
   };
   rec.onend=()=>{if(btn)btn.classList.remove('rec');activeRec=null;};
