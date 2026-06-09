@@ -115,6 +115,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .mic-btn{margin-left:8px;width:30px;height:30px;border-radius:50%;border:none;background:var(--gl);color:var(--gd);cursor:pointer;font-size:16px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
 .mic-btn:hover{background:var(--gb);}
 .step-btns{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.prog-hint{font-size:11px;color:var(--text3);font-style:italic;margin-bottom:8px;display:none;}
+.prog-hint.show{display:block;}
 .btn-xs.mic{width:28px;height:28px;font-size:15px;background:var(--gl);color:var(--gd);border:none;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
 .btn-xs.mic:hover{background:var(--gb);color:var(--gd);}
 .rec{background:#E24B4A !important;color:#fff !important;border-color:#E24B4A !important;animation:micpulse 1s infinite;box-shadow:0 0 0 4px rgba(226,75,74,0.2) !important;}
@@ -427,7 +429,8 @@ function buildBody(r){
     <div class="sec">Ingrédients</div>
     <ul class="ing-list" id="ing-${r.id}">${ings}</ul>
     <button class="btn-link" onclick="addIng(${r.id})"><i class="ti ti-plus"></i> Ajouter un ingrédient</button>
-    <div class="sec" style="margin-top:14px">Progression</div>
+    <div class="sec" style="margin-top:14px">Progression <button class="mic-btn" id="progmic-${r.id}" onclick="dictateProgression(${r.id},this)" title="Dicter toute la progression"><i class="ti ti-microphone"></i></button></div>
+    <div id="progHint-${r.id}" class="prog-hint">Astuce : dites « étape suivante » pour passer à l'étape d'après.</div>
     <div id="steps-${r.id}">${steps}</div>
     <button class="btn-link" onclick="addStep(${r.id})"><i class="ti ti-plus"></i> Ajouter une étape</button>
     ${basesBlock}
@@ -446,6 +449,38 @@ function buildBody(r){
     <button class="btn-del" onclick="delItem(${r.id})"><i class="ti ti-trash"></i> Supprimer</button>
     <button class="btn-save" onclick="saveItem(${r.id})"><i class="ti ti-check"></i> Enregistrer</button>
   </div>`;
+}
+
+// ─── DICTÉE PROGRESSION (multi-étapes) ─────────────────
+let progRec=null;
+function dictateProgression(rid,btn){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert("La dictée vocale n'est pas disponible sur ce navigateur. Utilisez Chrome ou Safari récent.");return;}
+  if(progRec){progRec.stop();return;}
+  const r=getItem(rid);if(!r)return;
+  // Étapes déjà saisies (non vides) conservées, les nouvelles s'ajoutent à la suite
+  const committed=(r.steps||[]).filter(s=>s.trim());
+  const rec=new SR();
+  rec.lang='fr-FR';rec.continuous=true;rec.interimResults=true;
+  const hint=document.getElementById('progHint-'+rid);
+  if(hint)hint.classList.add('show');
+  if(btn)btn.classList.add('rec');
+  const SPLIT=/\s*(?:étapes? suivantes?|etapes? suivantes?|nouvelles? étapes?|nouvelles? etapes?|prochaines? étapes?|prochaines? etapes?|étape d'après|etape d'apres|point suivant)\s*/gi;
+  rec.onresult=e=>{
+    let full='';
+    for(let i=0;i<e.results.length;i++){full+=e.results[i][0].transcript+' ';}
+    const parts=full.split(SPLIT).map(p=>p.trim()).filter(p=>p.length);
+    r.steps=[...committed,...parts];
+    if(r.steps.length===0)r.steps=[''];
+    refreshBody(r);
+    // refreshBody recrée le DOM : on réaffiche l'état "enregistrement"
+    const b2=document.getElementById('progmic-'+rid);if(b2)b2.classList.add('rec');
+    const h2=document.getElementById('progHint-'+rid);if(h2)h2.classList.add('show');
+  };
+  rec.onend=()=>{progRec=null;const b2=document.getElementById('progmic-'+rid);if(b2)b2.classList.remove('rec');const h2=document.getElementById('progHint-'+rid);if(h2)h2.classList.remove('show');save();};
+  rec.onerror=ev=>{progRec=null;const b2=document.getElementById('progmic-'+rid);if(b2)b2.classList.remove('rec');if(ev.error==='not-allowed')alert("Autorisez l'accès au micro pour dicter.");};
+  progRec=rec;
+  try{rec.start();}catch(e){progRec=null;if(btn)btn.classList.remove('rec');}
 }
 
 // ─── DICTÉE VOCALE ─────────────────────────────────────
