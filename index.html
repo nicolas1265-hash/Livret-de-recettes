@@ -451,69 +451,72 @@ function buildBody(r){
   </div>`;
 }
 
+// ─── MOTEUR DE DICTÉE (segments enchaînés, anti-doublon) ─
+// Sur Android le mode "continu" duplique les mots. On utilise donc
+// des sessions courtes (1 phrase) qu'on relance automatiquement.
+function startRecorder(onChunk,onStop){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert("La dictée vocale n'est pas disponible sur ce navigateur. Utilisez Chrome ou Safari récent.");return null;}
+  let recording=true;
+  const rec=new SR();
+  rec.lang='fr-FR';rec.continuous=false;rec.interimResults=false;rec.maxAlternatives=1;
+  rec.onresult=e=>{
+    let chunk='';
+    for(let i=0;i<e.results.length;i++){if(e.results[i].isFinal)chunk+=e.results[i][0].transcript+' ';}
+    chunk=chunk.trim();
+    if(chunk)onChunk(chunk);
+  };
+  rec.onend=()=>{ if(recording){try{rec.start();}catch(e){}} else {onStop&&onStop();} };
+  rec.onerror=ev=>{ if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){recording=false;alert("Autorisez l'accès au micro pour dicter.");} };
+  try{rec.start();}catch(e){return null;}
+  return {stop:()=>{recording=false;try{rec.stop();}catch(e){}}};
+}
+
 // ─── DICTÉE PROGRESSION (multi-étapes) ─────────────────
 let progRec=null;
 function dictateProgression(rid,btn){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert("La dictée vocale n'est pas disponible sur ce navigateur. Utilisez Chrome ou Safari récent.");return;}
-  if(progRec){progRec.stop();return;}
+  if(progRec){progRec.stop();progRec=null;return;}
   const r=getItem(rid);if(!r)return;
-  // Étapes déjà saisies (non vides) conservées, les nouvelles s'ajoutent à la suite
   const committed=(r.steps||[]).filter(s=>s.trim());
-  const rec=new SR();
-  rec.lang='fr-FR';rec.continuous=true;rec.interimResults=true;
-  const hint=document.getElementById('progHint-'+rid);
-  if(hint)hint.classList.add('show');
-  if(btn)btn.classList.add('rec');
   const SPLIT=/\s*(?:étapes? suivantes?|etapes? suivantes?|nouvelles? étapes?|nouvelles? etapes?|prochaines? étapes?|prochaines? etapes?|étape d'après|etape d'apres|point suivant)\s*/gi;
-  let finalT='';
-  rec.onresult=e=>{
-    let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const t=e.results[i][0].transcript;
-      if(e.results[i].isFinal)finalT+=t+' ';else interim+=t;
+  let buffer='';
+  if(btn)btn.classList.add('rec');
+  const h=document.getElementById('progHint-'+rid);if(h)h.classList.add('show');
+  const rr=startRecorder(
+    chunk=>{
+      buffer+=chunk+' ';
+      const parts=buffer.split(SPLIT).map(p=>p.trim()).filter(p=>p.length);
+      r.steps=[...committed,...parts];
+      if(r.steps.length===0)r.steps=[''];
+      refreshBody(r);
+      const b2=document.getElementById('progmic-'+rid);if(b2)b2.classList.add('rec');
+      const h2=document.getElementById('progHint-'+rid);if(h2)h2.classList.add('show');
+    },
+    ()=>{
+      progRec=null;
+      const b2=document.getElementById('progmic-'+rid);if(b2)b2.classList.remove('rec');
+      const h2=document.getElementById('progHint-'+rid);if(h2)h2.classList.remove('show');
+      save();
     }
-    const full=finalT+interim;
-    const parts=full.split(SPLIT).map(p=>p.trim()).filter(p=>p.length);
-    r.steps=[...committed,...parts];
-    if(r.steps.length===0)r.steps=[''];
-    refreshBody(r);
-    // refreshBody recrée le DOM : on réaffiche l'état "enregistrement"
-    const b2=document.getElementById('progmic-'+rid);if(b2)b2.classList.add('rec');
-    const h2=document.getElementById('progHint-'+rid);if(h2)h2.classList.add('show');
-  };
-  rec.onend=()=>{progRec=null;const b2=document.getElementById('progmic-'+rid);if(b2)b2.classList.remove('rec');const h2=document.getElementById('progHint-'+rid);if(h2)h2.classList.remove('show');save();};
-  rec.onerror=ev=>{progRec=null;const b2=document.getElementById('progmic-'+rid);if(b2)b2.classList.remove('rec');if(ev.error==='not-allowed')alert("Autorisez l'accès au micro pour dicter.");};
-  progRec=rec;
-  try{rec.start();}catch(e){progRec=null;if(btn)btn.classList.remove('rec');}
+  );
+  if(!rr){if(btn)btn.classList.remove('rec');if(h)h.classList.remove('show');return;}
+  progRec=rr;
 }
 
-// ─── DICTÉE VOCALE ─────────────────────────────────────
+// ─── DICTÉE VOCALE (champ unique) ──────────────────────
 let activeRec=null;
 function dictate(elId,onText,btn){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert("La dictée vocale n'est pas disponible sur ce navigateur. Utilisez Chrome ou Safari récent.");return;}
-  if(activeRec){activeRec.stop();return;}
+  if(activeRec){activeRec.stop();activeRec=null;return;}
   const el=document.getElementById(elId);
   if(!el)return;
-  const rec=new SR();
-  rec.lang='fr-FR';rec.continuous=true;rec.interimResults=true;
-  const base=el.value&&!el.value.endsWith(' ')?el.value+' ':el.value;
   if(btn)btn.classList.add('rec');
-  let finalT='';
-  rec.onresult=e=>{
-    let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const t=e.results[i][0].transcript;
-      if(e.results[i].isFinal)finalT+=t+' ';else interim+=t;
-    }
-    el.value=base+finalT+interim;
-    onText(el.value);
-  };
-  rec.onend=()=>{if(btn)btn.classList.remove('rec');activeRec=null;};
-  rec.onerror=ev=>{if(btn)btn.classList.remove('rec');activeRec=null;if(ev.error==='not-allowed')alert("Autorisez l'accès au micro pour dicter.");};
-  activeRec=rec;
-  try{rec.start();}catch(e){activeRec=null;if(btn)btn.classList.remove('rec');}
+  let buffer=el.value?el.value.replace(/\s+$/,'')+' ':'';
+  const rr=startRecorder(
+    chunk=>{ buffer+=chunk+' '; el.value=buffer; onText(el.value); },
+    ()=>{ activeRec=null; if(btn)btn.classList.remove('rec'); }
+  );
+  if(!rr){if(btn)btn.classList.remove('rec');return;}
+  activeRec=rr;
 }
 
 function printItem(id){
