@@ -467,7 +467,11 @@ function startRecorder(onChunk,onStop){
     if(chunk)onChunk(chunk);
   };
   rec.onend=()=>{ if(recording){try{rec.start();}catch(e){}} else {onStop&&onStop();} };
-  rec.onerror=ev=>{ if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){recording=false;alert("Autorisez l'accès au micro pour dicter.");} };
+  rec.onerror=ev=>{
+    if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){recording=false;alert("Autorisez l'accès au micro pour dicter.");}
+    else if(ev.error==='audio-capture'){recording=false;alert("Aucun micro détecté sur cet appareil.");}
+    else if(ev.error==='network'){recording=false;alert("La dictée a besoin d'internet et peut être bloquée par le réseau de l'entreprise. Essayez sur le téléphone ou un autre réseau.");}
+  };
   try{rec.start();}catch(e){return null;}
   return {stop:()=>{recording=false;try{rec.stop();}catch(e){}}};
 }
